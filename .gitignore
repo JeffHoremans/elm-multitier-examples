@@ -4,7 +4,5 @@ elm-stuff/
 repl-temp-*
 
 # generated files
-examples/*.js
-examples/*.html
-examples/demo/*.js
-examples/demo/*.html
+*.js
+*.html
