@@ -9,7 +9,7 @@ import WebSocket
 import String
 
 import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, batch, performOnServer, map, (!!))
-import Multitier.Procedure as Procedure exposing (procedure, Procedure)
+import Multitier.RemoteProcedure as RemoteProcedure exposing (remoteProcedure, RemoteProcedure)
 import Multitier.Error exposing (Error(..))
 import Multitier.Server.Console as Console
 import Multitier.Server.WebSocket as ServerWebSocket exposing (SocketServer)
@@ -30,17 +30,17 @@ type alias ServerModel = { socketServer: Maybe SocketServer
 initServer : (ServerModel, Cmd ServerMsg)
 initServer = ServerModel Maybe.Nothing [] Counter.initServer ! []
 
-type RemoteProcedure = Log String | SendMessage String | ServerProc Counter.RemoteProcedure
+type Procedure = Log String | SendMessage String | ServerProc Counter.Procedure
 
-procedures : RemoteProcedure -> Procedure ServerModel Msg ServerMsg
+procedures : Procedure -> RemoteProcedure ServerModel Msg ServerMsg
 procedures rproc = case rproc of
   Log val ->
-    procedure Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
+    remoteProcedure Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
   SendMessage message ->
-    procedure Handle (\serverModel -> let newMessages = message :: serverModel.messages in
+    remoteProcedure Handle (\serverModel -> let newMessages = message :: serverModel.messages in
                                            ({ serverModel | messages = newMessages }, Task.succeed (), broadcast serverModel (String.join "," newMessages)))
   ServerProc proc ->
-    Procedure.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.remoteProcedures proc)
+    RemoteProcedure.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.remoteProcedures proc)
 
 
 type ServerMsg = ServerTick | OnMessage (Int,String) | OnSocketOpen SocketServer |
@@ -83,7 +83,7 @@ type alias Model = { input: String
                    , error: String
                    , counter: Counter.Model }
 
-init : ServerState -> ( Model, MultitierCmd RemoteProcedure Msg)
+init : ServerState -> ( Model, MultitierCmd Procedure Msg)
 init {messages} = let (counter, cmds) = Counter.init
        in (Model "" messages "" counter,  batch [ map ServerProc CounterMsg cmds ])
 
@@ -91,7 +91,7 @@ type Msg = OnInput String | Send |
            Handle (Result Error ()) | SetMessages String |
            CounterMsg Counter.Msg | None
 
-update : Msg -> Model -> ( Model, MultitierCmd RemoteProcedure Msg )
+update : Msg -> Model -> ( Model, MultitierCmd Procedure Msg )
 update msg model =
     case msg of
       OnInput text -> ({ model | input = text}, none)

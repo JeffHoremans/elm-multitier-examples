@@ -6,7 +6,7 @@ import Html.Events as E
 import Task exposing (Task)
 
 import Multitier exposing (MultitierCmd(..), Config, none, batch, (!!), performOnServer)
-import Multitier.Procedure exposing (Procedure, procedure)
+import Multitier.RemoteProcedure exposing (RemoteProcedure, remoteProcedure)
 import Multitier.Error exposing (Error)
 
 type alias Model = { value: Int, error: String }
@@ -18,11 +18,11 @@ type alias ServerModel = { test: String }
 initServer : ServerModel
 initServer = ServerModel ""
 
-type RemoteProcedure = Add Int Int
+type Procedure = Add Int Int
 
-remoteProcedures : RemoteProcedure -> Procedure ServerModel Msg ServerMsg
+remoteProcedures : Procedure -> RemoteProcedure ServerModel Msg ServerMsg
 remoteProcedures proc = case proc of
-  Add a b -> procedure Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
+  Add a b -> remoteProcedure Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
 
 type ServerMsg = Nothing
 
@@ -34,12 +34,12 @@ serverSubscriptions model = Sub.none
 
 -- MODEL
 
-init : ( Model, MultitierCmd RemoteProcedure Msg)
+init : ( Model, MultitierCmd Procedure Msg)
 init = Model 0 "" !! []
 
 type Msg = Handle (Result Error Int) | Increment | None
 
-update : Msg -> Model -> ( Model, MultitierCmd RemoteProcedure Msg )
+update : Msg -> Model -> ( Model, MultitierCmd Procedure Msg )
 update msg model =
     case msg of
       Handle result -> case result of
