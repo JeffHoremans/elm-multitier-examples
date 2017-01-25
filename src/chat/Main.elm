@@ -34,15 +34,15 @@ initServer = ServerModel Maybe.Nothing [] Counter.initServer ! []
 
 type RemoteServerMsg = Log String | SendMessage String | CounterProc Counter.RemoteServerMsg
 
-procedures : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
-procedures rproc = case rproc of
+serverRPCs : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
+serverRPCs rproc = case rproc of
   Log val ->
     rpc Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
   SendMessage message ->
     rpc Handle (\serverModel -> let newMessages = message :: serverModel.messages in
                                            ({ serverModel | messages = newMessages }, Task.succeed (), broadcast serverModel (String.join "," newMessages)))
   CounterProc proc ->
-    RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.procedures proc)
+    RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
 
 -- SERVER-UPDATE
 
@@ -146,7 +146,7 @@ program =
     , subscriptions = subscriptions
     , view = view
     , serverState = serverState
-    , procedures = procedures
+    , serverRPCs = serverRPCs
     , initServer = initServer
     , updateServer = updateServer
     , serverSubscriptions = serverSubscriptions

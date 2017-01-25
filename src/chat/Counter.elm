@@ -20,8 +20,8 @@ initServer = ServerModel ""
 
 type RemoteServerMsg = Add Int Int
 
-procedures : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
-procedures proc = case proc of
+serverRPCs : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
+serverRPCs proc = case proc of
   Add a b -> rpc Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
 
 type ServerMsg = Nothing
