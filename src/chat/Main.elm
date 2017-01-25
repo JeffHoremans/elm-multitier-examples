@@ -9,7 +9,7 @@ import WebSocket
 import String
 
 import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, batch, performOnServer, map, (!!))
-import Multitier.RemoteProcedure as RemoteProcedure exposing (remoteProcedure, RemoteProcedure)
+import Multitier.RPC as RPC exposing (rpc, RPC)
 import Multitier.Error exposing (Error(..))
 import Multitier.Server.Console as Console
 import Multitier.Server.WebSocket as ServerWebSocket exposing (SocketServer)
@@ -34,15 +34,15 @@ initServer = ServerModel Maybe.Nothing [] Counter.initServer ! []
 
 type RemoteServerMsg = Log String | SendMessage String | CounterProc Counter.RemoteServerMsg
 
-procedures : RemoteServerMsg -> RemoteProcedure ServerModel Msg ServerMsg
+procedures : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
 procedures rproc = case rproc of
   Log val ->
-    remoteProcedure Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
+    rpc Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
   SendMessage message ->
-    remoteProcedure Handle (\serverModel -> let newMessages = message :: serverModel.messages in
+    rpc Handle (\serverModel -> let newMessages = message :: serverModel.messages in
                                            ({ serverModel | messages = newMessages }, Task.succeed (), broadcast serverModel (String.join "," newMessages)))
   CounterProc proc ->
-    RemoteProcedure.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.procedures proc)
+    RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.procedures proc)
 
 -- SERVER-UPDATE
 

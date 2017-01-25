@@ -6,7 +6,7 @@ import Html.Events as E
 import Task exposing (Task)
 
 import Multitier exposing (MultitierCmd(..), Config, none, batch, (!!), performOnServer)
-import Multitier.RemoteProcedure exposing (RemoteProcedure, remoteProcedure)
+import Multitier.RPC exposing (RPC, rpc)
 import Multitier.Error exposing (Error)
 
 type alias Model = { value: Int, error: String }
@@ -20,9 +20,9 @@ initServer = ServerModel ""
 
 type RemoteServerMsg = Add Int Int
 
-procedures : RemoteServerMsg -> RemoteProcedure ServerModel Msg ServerMsg
+procedures : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
 procedures proc = case proc of
-  Add a b -> remoteProcedure Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
+  Add a b -> rpc Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
 
 type ServerMsg = Nothing
 
