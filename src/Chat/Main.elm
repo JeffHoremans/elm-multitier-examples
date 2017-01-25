@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Chat.Main exposing (..)
 
 import Html exposing (Html)
 import Html.Events as E
@@ -14,7 +14,7 @@ import Multitier.Error exposing (Error(..))
 import Multitier.Server.Console as Console
 import Multitier.Server.WebSocket as ServerWebSocket exposing (SocketServer)
 
-import Counter
+import Chat.Counter as Counter
 
 -- MULTITIER-CONFIG
 

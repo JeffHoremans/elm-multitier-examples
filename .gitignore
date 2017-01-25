@@ -6,5 +6,5 @@ repl-temp-*
 # generated files
 *.js
 *.html
-*src/chat/.ClientStarter.elm
-*src/chat/.ServerStarter.elm
+src/*/.ClientStarter.elm
+src/*/.ServerStarter.elm

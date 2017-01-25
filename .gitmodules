@@ -1,3 +1,6 @@
 [submodule "elm-multitier"]
 	path = elm-multitier
 	url = https://github.com/JeffHoremans/elm-multitier.git
+[submodule "elm-multitier-debugger"]
+	path = elm-multitier-debugger
+	url = https://github.com/JeffHoremans/elm-multitier-debugger.git

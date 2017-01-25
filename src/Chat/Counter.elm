@@ -1,4 +1,4 @@
-module Counter
+module Chat.Counter
   exposing ( .. )
 
 import Html exposing (..)
