@@ -16,12 +16,12 @@ import Multitier.Server.WebSocket as ServerWebSocket exposing (SocketServer)
 
 import Counter
 
--- MULTITIER - CONFIG
+-- MULTITIER-CONFIG
 
 config: Config
 config = { httpPort = 8081, hostname = "localhost" }
 
--- MULTITIER - PROCEDURES
+-- SERVER-MODEL
 
 type alias ServerModel = { socketServer: Maybe SocketServer
                          , messages: List String
@@ -30,9 +30,11 @@ type alias ServerModel = { socketServer: Maybe SocketServer
 initServer : (ServerModel, Cmd ServerMsg)
 initServer = ServerModel Maybe.Nothing [] Counter.initServer ! []
 
-type Procedure = Log String | SendMessage String | CounterProc Counter.Procedure
+-- SERVER-REMOTE-UPDATE
 
-procedures : Procedure -> RemoteProcedure ServerModel Msg ServerMsg
+type RemoteServerMsg = Log String | SendMessage String | CounterProc Counter.RemoteServerMsg
+
+procedures : RemoteServerMsg -> RemoteProcedure ServerModel Msg ServerMsg
 procedures rproc = case rproc of
   Log val ->
     remoteProcedure Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
@@ -40,8 +42,9 @@ procedures rproc = case rproc of
     remoteProcedure Handle (\serverModel -> let newMessages = message :: serverModel.messages in
                                            ({ serverModel | messages = newMessages }, Task.succeed (), broadcast serverModel (String.join "," newMessages)))
   CounterProc proc ->
-    RemoteProcedure.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.remoteProcedures proc)
+    RemoteProcedure.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.procedures proc)
 
+-- SERVER-UPDATE
 
 type ServerMsg = ServerTick | OnMessage (Int,String) | OnSocketOpen SocketServer |
                  CounterServerMsg Counter.ServerMsg |
@@ -57,6 +60,8 @@ updateServer serverMsg serverModel = case serverMsg of
                                 { serverModel | counter = counter } ! [ Cmd.map CounterServerMsg cmd]
 
   Nothing ->                    serverModel ! []
+
+-- SERVER-SUBSCRIPTIONS
 
 serverSubscriptions : ServerModel -> Sub ServerMsg
 serverSubscriptions serverModel =
@@ -83,15 +88,17 @@ type alias Model = { input: String
                    , error: String
                    , counter: Counter.Model }
 
-init : ServerState -> ( Model, MultitierCmd Procedure Msg)
+init : ServerState -> ( Model, MultitierCmd RemoteServerMsg Msg)
 init {messages} = let (counter, cmds) = Counter.init
        in (Model "" messages "" counter,  batch [ map CounterProc CounterMsg cmds ])
+
+-- UPDATE
 
 type Msg = OnInput String | Send |
            Handle (Result Error ()) | SetMessages String |
            CounterMsg Counter.Msg | None
 
-update : Msg -> Model -> ( Model, MultitierCmd Procedure Msg )
+update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model =
     case msg of
       OnInput text -> ({ model | input = text}, none)
@@ -127,6 +134,8 @@ view model =
       Html.br [] [],
       Html.text model.error],
     Html.div [] [Html.map CounterMsg (Counter.view model.counter)]]]
+
+-- MAIN
 
 program : MultitierProgram Model ServerModel Msg ServerMsg
 program =

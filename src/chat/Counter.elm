@@ -18,10 +18,10 @@ type alias ServerModel = { test: String }
 initServer : ServerModel
 initServer = ServerModel ""
 
-type Procedure = Add Int Int
+type RemoteServerMsg = Add Int Int
 
-remoteProcedures : Procedure -> RemoteProcedure ServerModel Msg ServerMsg
-remoteProcedures proc = case proc of
+procedures : RemoteServerMsg -> RemoteProcedure ServerModel Msg ServerMsg
+procedures proc = case proc of
   Add a b -> remoteProcedure Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
 
 type ServerMsg = Nothing
@@ -34,12 +34,12 @@ serverSubscriptions model = Sub.none
 
 -- MODEL
 
-init : ( Model, MultitierCmd Procedure Msg)
+init : ( Model, MultitierCmd RemoteServerMsg Msg)
 init = Model 0 "" !! []
 
 type Msg = Handle (Result Error Int) | Increment | None
 
-update : Msg -> Model -> ( Model, MultitierCmd Procedure Msg )
+update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model =
     case msg of
       Handle result -> case result of
