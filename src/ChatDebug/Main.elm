@@ -1,7 +1,7 @@
 module ChatDebug.Main exposing (..)
 
 import Multitier exposing (MultitierProgram)
-import MultitierDebugger as Debugger exposing (Model, ServerModel, Msg, ServerMsg)
+import Multitier.Debugger as Debugger exposing (Model, ServerModel, Msg, ServerMsg)
 
 import Chat.Main as Main
 
