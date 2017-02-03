@@ -53,7 +53,7 @@ type ServerMsg = ServerTick | OnMessage (Int,String) | OnSocketOpen SocketServer
 updateServer : ServerMsg -> ServerModel -> (ServerModel, Cmd ServerMsg)
 updateServer serverMsg serverModel = case serverMsg of
   ServerTick ->                 serverModel ! [Console.log (toString serverModel.messages)]
-  OnMessage (cid,message) ->    serverModel ! [ Console.log message]
+  OnMessage (cid,message) ->    serverModel ! [Console.log message]
   OnSocketOpen socketServer ->  { serverModel | socketServer = Just socketServer } ! []
 
   CounterServerMsg msg ->      let (counter, cmd) = Counter.updateServer msg serverModel.counter in
@@ -66,7 +66,7 @@ updateServer serverMsg serverModel = case serverMsg of
 serverSubscriptions : ServerModel -> Sub ServerMsg
 serverSubscriptions serverModel =
   Sub.batch [ Time.every 10000 (always ServerTick)
-            , ServerWebSocket.listen OnSocketOpen OnMessage
+            , ServerWebSocket.listen OnSocketOpen (always Nothing) (always Nothing) OnMessage
             , Sub.map CounterServerMsg (Counter.serverSubscriptions serverModel.counter)]
 
 broadcast : ServerModel -> String -> Cmd ServerMsg
