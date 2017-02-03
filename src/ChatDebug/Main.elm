@@ -7,7 +7,7 @@ import Chat.Main as Main
 
 -- MAIN
 
-program : MultitierProgram (Model Main.Model Main.Msg Main.ServerModel Main.ServerMsg) (ServerModel Main.ServerModel Main.ServerMsg Main.Model Main.Msg) (Msg Main.Msg) (ServerMsg Main.ServerMsg)
+program : MultitierProgram (Model Main.Model Main.Msg Main.ServerModel Main.ServerMsg) (ServerModel Main.ServerModel Main.ServerMsg Main.Model Main.Msg) (Msg Main.Model Main.Msg Main.ServerModel Main.ServerMsg) (ServerMsg Main.ServerMsg)
 program =
   Debugger.program
     { config = Main.config
