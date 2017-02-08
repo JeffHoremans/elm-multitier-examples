@@ -12,7 +12,7 @@ import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, bat
 import Multitier.RPC as RPC exposing (rpc, RPC)
 import Multitier.Error exposing (Error(..))
 import Multitier.Server.Console as Console
-import Multitier.Server.WebSocket as ServerWebSocket exposing (SocketServer)
+import Multitier.Server.WebSocket as ServerWebSocket exposing (ClientId, WebSocket)
 
 import Chat.Counter as Counter
 
@@ -23,7 +23,7 @@ config = { httpPort = 8081, hostname = "localhost" }
 
 -- SERVER-MODEL
 
-type alias ServerModel = { socketServer: Maybe SocketServer
+type alias ServerModel = { socketServer: Maybe WebSocket
                          , messages: List String
                          , counter: Counter.ServerModel }
 
@@ -46,7 +46,7 @@ serverRPCs rproc = case rproc of
 
 -- SERVER-UPDATE
 
-type ServerMsg = ServerTick | OnMessage (Int,String) | OnSocketOpen SocketServer |
+type ServerMsg = ServerTick | OnMessage (ClientId,String) | OnSocketOpen WebSocket |
                  CounterServerMsg Counter.ServerMsg |
                  Nothing
 
@@ -66,7 +66,7 @@ updateServer serverMsg serverModel = case serverMsg of
 serverSubscriptions : ServerModel -> Sub ServerMsg
 serverSubscriptions serverModel =
   Sub.batch [ Time.every 10000 (always ServerTick)
-            , ServerWebSocket.listen OnSocketOpen (always Nothing) (always Nothing) OnMessage
+            , ServerWebSocket.listen "chat" OnSocketOpen (always Nothing) (always Nothing) OnMessage
             , Sub.map CounterServerMsg (Counter.serverSubscriptions serverModel.counter)]
 
 broadcast : ServerModel -> String -> Cmd ServerMsg
@@ -115,7 +115,7 @@ update msg model =
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
-subscriptions model = Sub.batch [WebSocket.listen "ws://localhost:8081" SetMessages, Sub.map CounterMsg (Counter.subscriptions model.counter)]
+subscriptions model = Sub.batch [WebSocket.listen "ws://localhost:8081/chat" SetMessages, Sub.map CounterMsg (Counter.subscriptions model.counter)]
 
 -- VIEW
 
