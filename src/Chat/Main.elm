@@ -23,7 +23,7 @@ config = { httpPort = 8081, hostname = "localhost" }
 
 -- SERVER-MODEL
 
-type alias ServerModel = { socketServer: Maybe WebSocket
+type alias ServerModel = { socket: Maybe WebSocket
                          , messages: List String
                          , counter: Counter.ServerModel }
 
@@ -54,7 +54,7 @@ updateServer : ServerMsg -> ServerModel -> (ServerModel, Cmd ServerMsg)
 updateServer serverMsg serverModel = case serverMsg of
   ServerTick ->                 serverModel ! [Console.log (toString serverModel.messages)]
   OnMessage (cid,message) ->    serverModel ! [Console.log message]
-  OnSocketOpen socketServer ->  { serverModel | socketServer = Just socketServer } ! []
+  OnSocketOpen socket ->        { serverModel | socket = Just socket } ! []
 
   CounterServerMsg msg ->      let (counter, cmd) = Counter.updateServer msg serverModel.counter in
                                 { serverModel | counter = counter } ! [ Cmd.map CounterServerMsg cmd]
@@ -70,8 +70,8 @@ serverSubscriptions serverModel =
             , Sub.map CounterServerMsg (Counter.serverSubscriptions serverModel.counter)]
 
 broadcast : ServerModel -> String -> Cmd ServerMsg
-broadcast serverModel message = case serverModel.socketServer of
-  Just server -> ServerWebSocket.broadcast server message
+broadcast serverModel message = case serverModel.socket of
+  Just socket -> ServerWebSocket.broadcast socket message
   _ -> Cmd.none
 
 -- SERVER-STATE
