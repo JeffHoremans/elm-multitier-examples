@@ -46,9 +46,9 @@ serverRPCs rproc = case rproc of
 
 -- SERVER-UPDATE
 
-type ServerMsg = ServerTick | OnMessage (ClientId,String) | OnSocketOpen WebSocket |
-                 CounterServerMsg Counter.ServerMsg |
-                 Nothing
+type ServerMsg = ServerTick | OnMessage (ClientId,String) |
+                 OnSocketOpen WebSocket | OnConnect ClientId | OnDisconnect ClientId |
+                 CounterServerMsg Counter.ServerMsg
 
 updateServer : ServerMsg -> ServerModel -> (ServerModel, Cmd ServerMsg)
 updateServer serverMsg serverModel = case serverMsg of
@@ -59,14 +59,15 @@ updateServer serverMsg serverModel = case serverMsg of
   CounterServerMsg msg ->      let (counter, cmd) = Counter.updateServer msg serverModel.counter in
                                 { serverModel | counter = counter } ! [ Cmd.map CounterServerMsg cmd]
 
-  Nothing ->                    serverModel ! []
+  OnConnect cid -> serverModel ! []
+  OnDisconnect cid -> serverModel ! []
 
 -- SERVER-SUBSCRIPTIONS
 
 serverSubscriptions : ServerModel -> Sub ServerMsg
 serverSubscriptions serverModel =
   Sub.batch [ Time.every 10000 (always ServerTick)
-            , ServerWebSocket.listen "chat" OnSocketOpen (always Nothing) (always Nothing) OnMessage
+            , ServerWebSocket.listen "chat" OnSocketOpen OnConnect OnDisconnect OnMessage
             , Sub.map CounterServerMsg (Counter.serverSubscriptions serverModel.counter)]
 
 broadcast : ServerModel -> String -> Cmd ServerMsg
