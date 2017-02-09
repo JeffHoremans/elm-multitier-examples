@@ -42,7 +42,7 @@ serverRPCs rproc = case rproc of
     rpc Handle (\serverModel -> let newMessages = message :: serverModel.messages in
                                            ({ serverModel | messages = newMessages }, Task.succeed (), broadcast serverModel (String.join "," newMessages)))
   CounterProc proc ->
-    RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter}) (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
+    RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter} ! []) (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
 
 -- SERVER-UPDATE
 
