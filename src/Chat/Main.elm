@@ -78,8 +78,8 @@ broadcast serverModel message = case serverModel.socket of
 
 type alias ServerState = { messages: List String }
 
-serverState: ServerModel -> ServerState
-serverState {messages} = ServerState messages
+serverState: ServerModel -> (ServerState, ServerModel, Cmd ServerMsg)
+serverState serverModel = (ServerState serverModel.messages, serverModel, Cmd.none)
 
 -- MODEL
 
