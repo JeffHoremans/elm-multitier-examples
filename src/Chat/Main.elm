@@ -12,7 +12,7 @@ import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, bat
 import Multitier.RPC as RPC exposing (rpc, RPC)
 import Multitier.Error exposing (Error(..))
 import Multitier.Server.Console as Console
-import Multitier.Server.WebSocket as ServerWebSocket exposing (ClientId, WebSocket)
+import Multitier.Server.WebSocket as ServerWebSocket exposing (ClientId)
 
 import Chat.Counter as Counter
 
@@ -23,12 +23,11 @@ config = { httpPort = 8081, hostname = "localhost" }
 
 -- SERVER-MODEL
 
-type alias ServerModel = { socket: Maybe WebSocket
-                         , messages: List String
+type alias ServerModel = { messages: List String
                          , counter: Counter.ServerModel }
 
 initServer : (ServerModel, Cmd ServerMsg)
-initServer = ServerModel Maybe.Nothing [] Counter.initServer ! []
+initServer = ServerModel [] Counter.initServer ! []
 
 -- SERVER-REMOTE-UPDATE
 
@@ -47,19 +46,18 @@ serverRPCs rproc = case rproc of
 -- SERVER-UPDATE
 
 type ServerMsg = ServerTick | OnMessage (ClientId,String) |
-                 OnSocketOpen WebSocket | OnConnect ClientId | OnDisconnect ClientId |
+                 OnConnect ClientId | OnDisconnect ClientId |
                  CounterServerMsg Counter.ServerMsg
 
 updateServer : ServerMsg -> ServerModel -> (ServerModel, Cmd ServerMsg)
 updateServer serverMsg serverModel = case serverMsg of
   ServerTick ->                 serverModel ! [Console.log (toString serverModel.messages)]
   OnMessage (cid,message) ->    serverModel ! [Console.log message]
-  OnSocketOpen socket ->        { serverModel | socket = Just socket } ! []
 
   CounterServerMsg msg ->      let (counter, cmd) = Counter.updateServer msg serverModel.counter in
                                 { serverModel | counter = counter } ! [ Cmd.map CounterServerMsg cmd]
 
-  OnConnect cid -> serverModel ! []
+  OnConnect cid -> serverModel ! [broadcast serverModel (String.join "," serverModel.messages)]
   OnDisconnect cid -> serverModel ! []
 
 -- SERVER-SUBSCRIPTIONS
@@ -67,13 +65,11 @@ updateServer serverMsg serverModel = case serverMsg of
 serverSubscriptions : ServerModel -> Sub ServerMsg
 serverSubscriptions serverModel =
   Sub.batch [ Time.every 10000 (always ServerTick)
-            , ServerWebSocket.listen "chat" OnSocketOpen OnConnect OnDisconnect OnMessage
+            , ServerWebSocket.listenAndMonitor "chat" OnConnect OnDisconnect OnMessage
             , Sub.map CounterServerMsg (Counter.serverSubscriptions serverModel.counter)]
 
 broadcast : ServerModel -> String -> Cmd ServerMsg
-broadcast serverModel message = case serverModel.socket of
-  Just socket -> ServerWebSocket.broadcast socket message
-  _ -> Cmd.none
+broadcast serverModel message = ServerWebSocket.broadcast "chat" message
 
 -- SERVER-STATE
 
