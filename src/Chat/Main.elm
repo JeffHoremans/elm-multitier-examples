@@ -57,7 +57,7 @@ updateServer serverMsg serverModel = case serverMsg of
   CounterServerMsg msg ->      let (counter, cmd) = Counter.updateServer msg serverModel.counter in
                                 { serverModel | counter = counter } ! [ Cmd.map CounterServerMsg cmd]
 
-  OnConnect cid -> serverModel ! [send cid (String.join "," serverModel.messages)]
+  OnConnect cid -> serverModel ! []
   OnDisconnect cid -> serverModel ! []
 
 -- SERVER-SUBSCRIPTIONS
@@ -70,9 +70,6 @@ serverSubscriptions serverModel =
 
 broadcast : String -> Cmd ServerMsg
 broadcast message = ServerWebSocket.broadcast "chat" message
-
-send : ClientId -> String -> Cmd ServerMsg
-send cid message = ServerWebSocket.send "chat" cid message
 
 -- SERVER-STATE
 
