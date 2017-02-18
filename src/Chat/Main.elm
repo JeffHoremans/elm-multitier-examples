@@ -39,7 +39,7 @@ serverRPCs rproc = case rproc of
     rpc Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
   SendMessage message ->
     rpc Handle (\serverModel -> let newMessages = message :: serverModel.messages in
-                                           ({ serverModel | messages = newMessages }, Task.succeed (), broadcast serverModel (String.join "," newMessages)))
+                                           ({ serverModel | messages = newMessages }, Task.succeed (), broadcast (String.join "," newMessages)))
   CounterProc proc ->
     RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter} ! []) (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
 
@@ -57,7 +57,7 @@ updateServer serverMsg serverModel = case serverMsg of
   CounterServerMsg msg ->      let (counter, cmd) = Counter.updateServer msg serverModel.counter in
                                 { serverModel | counter = counter } ! [ Cmd.map CounterServerMsg cmd]
 
-  OnConnect cid -> serverModel ! [broadcast serverModel (String.join "," serverModel.messages)]
+  OnConnect cid -> serverModel ! [send cid (String.join "," serverModel.messages)]
   OnDisconnect cid -> serverModel ! []
 
 -- SERVER-SUBSCRIPTIONS
@@ -68,8 +68,11 @@ serverSubscriptions serverModel =
             , ServerWebSocket.listenAndMonitor "chat" OnConnect OnDisconnect OnMessage
             , Sub.map CounterServerMsg (Counter.serverSubscriptions serverModel.counter)]
 
-broadcast : ServerModel -> String -> Cmd ServerMsg
-broadcast serverModel message = ServerWebSocket.broadcast "chat" message
+broadcast : String -> Cmd ServerMsg
+broadcast message = ServerWebSocket.broadcast "chat" message
+
+send : ClientId -> String -> Cmd ServerMsg
+send cid message = ServerWebSocket.send "chat" cid message
 
 -- SERVER-STATE
 
