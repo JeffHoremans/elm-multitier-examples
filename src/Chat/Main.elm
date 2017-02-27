@@ -75,8 +75,8 @@ broadcast message = ServerWebSocket.broadcast "chat" message
 
 type alias ServerState = { messages: List String }
 
-serverState: ServerModel -> (ServerState, ServerModel, Cmd ServerMsg)
-serverState serverModel = (ServerState serverModel.messages, serverModel, Cmd.none)
+serverState: ServerModel -> ServerState
+serverState {messages} = ServerState messages
 
 -- MODEL
 

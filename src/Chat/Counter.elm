@@ -9,14 +9,14 @@ import Multitier exposing (MultitierCmd(..), Config, none, batch, (!!), performO
 import Multitier.RPC exposing (RPC, rpc)
 import Multitier.Error exposing (Error)
 
-type alias Model = { value: Int, error: String }
-
--- MULTITIER - PROCEDURES
+-- SERVER-MODEL
 
 type alias ServerModel = { test: String }
 
 initServer : ServerModel
 initServer = ServerModel ""
+
+-- RPC
 
 type RemoteServerMsg = Add Int Int
 
@@ -24,18 +24,28 @@ serverRPCs : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
 serverRPCs proc = case proc of
   Add a b -> rpc Handle (\serverModel -> (serverModel, Task.succeed (a + b), Cmd.none))
 
+-- SERVER-UPDATE
+
 type ServerMsg = Nothing
 
 updateServer : ServerMsg -> ServerModel -> (ServerModel, Cmd ServerMsg)
 updateServer _ serverModel = serverModel ! []
 
+-- SERVER-SUBSCRIPTIONS
+
 serverSubscriptions : ServerModel -> Sub ServerMsg
 serverSubscriptions model = Sub.none
 
+-- SERVER-STATE
+
 -- MODEL
+
+type alias Model = { value: Int, error: String }
 
 init : ( Model, MultitierCmd RemoteServerMsg Msg)
 init = Model 0 "" !! []
+
+-- UPDATE
 
 type Msg = Handle (Result Error Int) | Increment | None
 
