@@ -7,6 +7,7 @@ import Task exposing (Task)
 import Time exposing (Time, second)
 import WebSocket
 import String
+import Process
 
 import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, batch, performOnServer, performOnClient, map, (!!))
 import Multitier.RPC as RPC exposing (rpc, RPC)
@@ -39,7 +40,7 @@ serverRPCs rproc = case rproc of
     rpc Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
   SendMessage message ->
     rpc Handle (\serverModel -> let newMessages = message :: serverModel.messages in
-                                           ({ serverModel | messages = newMessages }, Task.succeed (), broadcast (String.join "," newMessages)))
+                                           ({ serverModel | messages = newMessages }, (Process.sleep 0 |> Task.andThen (\_ -> Task.succeed ())), broadcast (String.join "," newMessages)))
   CounterProc proc ->
     RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter} ! []) (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
 
