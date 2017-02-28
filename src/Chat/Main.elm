@@ -8,7 +8,7 @@ import Time exposing (Time, second)
 import WebSocket
 import String
 
-import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, batch, performOnServer, map, (!!))
+import Multitier exposing (MultitierProgram, MultitierCmd(..), Config, none, batch, performOnServer, performOnClient, map, (!!))
 import Multitier.RPC as RPC exposing (rpc, RPC)
 import Multitier.Error exposing (Error(..))
 import Multitier.Server.Console as Console
@@ -98,7 +98,7 @@ type Msg = OnInput String | Send |
 update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model =
     case msg of
-      OnInput text -> ({ model | input = text}, none)
+      OnInput text -> ({ model | input = text}, performOnClient (Console.log "test"))
       Send -> { model | input = "" } !! [performOnServer (SendMessage model.input)]
       Handle result -> case result of
         Ok _ -> model !! []
