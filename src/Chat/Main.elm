@@ -40,15 +40,18 @@ serverRPCs rproc = case rproc of
     rpc Handle (\serverModel -> (serverModel, Task.succeed (), Console.log val))
   SendMessage message ->
     rpc Handle (\serverModel -> let newMessages = message :: serverModel.messages in
-                                           ({ serverModel | messages = newMessages }, (Process.sleep 0 |> Task.andThen (\_ -> Task.succeed ())), broadcast (String.join "," newMessages)))
+                                           ({ serverModel | messages = newMessages }, (Process.sleep 20000 |> Task.andThen (\_ -> Task.succeed ())), Cmd.batch [broadcast (String.join "," newMessages), Task.perform (always MessageFromRPC) (Process.sleep 5000 |> Task.andThen (\_ -> Task.succeed ()))]))
   CounterProc proc ->
-    RPC.map CounterMsg CounterServerMsg (\counter serverModel -> { serverModel | counter = counter} ! []) (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
+    RPC.map CounterMsg
+      (\updateCounter serverModel -> let (newCounter,cmd) = updateCounter serverModel.counter in
+        ({ serverModel | counter = newCounter}, Cmd.map CounterServerMsg cmd))
+      (\serverModel -> serverModel.counter) (Counter.serverRPCs proc)
 
 -- SERVER-UPDATE
 
 type ServerMsg = ServerTick | OnMessage (ClientId,String) |
                  OnConnect ClientId | OnDisconnect ClientId |
-                 CounterServerMsg Counter.ServerMsg
+                 CounterServerMsg Counter.ServerMsg | MessageFromRPC | Test
 
 updateServer : ServerMsg -> ServerModel -> (ServerModel, Cmd ServerMsg)
 updateServer serverMsg serverModel = case serverMsg of
@@ -60,6 +63,8 @@ updateServer serverMsg serverModel = case serverMsg of
 
   OnConnect cid -> serverModel ! []
   OnDisconnect cid -> serverModel ! []
+  MessageFromRPC -> serverModel ! [Task.perform (always Test) (Task.succeed ())]
+  Test -> serverModel ! []
 
 -- SERVER-SUBSCRIPTIONS
 
@@ -88,13 +93,13 @@ type alias Model = { input: String
 
 init : ServerState -> ( Model, MultitierCmd RemoteServerMsg Msg)
 init {messages} = let (counter, cmds) = Counter.init
-       in (Model "" messages "" counter,  batch [ map CounterProc CounterMsg cmds ])
+       in (Model "" messages "" counter,  batch [ map CounterProc CounterMsg cmds ]) --, performOnServer (Log "log1"), performOnServer (Log "log2") ])
 
 -- UPDATE
 
 type Msg = OnInput String | Send |
            Handle (Result Error ()) | SetMessages String |
-           CounterMsg Counter.Msg | None
+           CounterMsg Counter.Msg | ChildMessageTest | None
 
 update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model =
@@ -104,10 +109,11 @@ update msg model =
       Handle result -> case result of
         Ok _ -> model !! []
         _ -> { model | error = "error" } !! []
-      SetMessages messages -> ({model | messages = String.split "," messages}, none)
+      SetMessages messages -> {model | messages = String.split "," messages} !! [performOnClient (Task.perform (always ChildMessageTest) (Process.sleep 5000 |> Task.andThen (\_ -> Task.succeed ())))]
 
 
       CounterMsg subMsg -> let (counter, cmds) = Counter.update subMsg model.counter in { model | counter = counter } !! [ map CounterProc CounterMsg cmds ]
+      ChildMessageTest -> ( model, none )
       None -> ( model, none )
 
 -- SUBSCRIPTIONS
