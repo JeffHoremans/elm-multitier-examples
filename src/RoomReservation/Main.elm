@@ -113,7 +113,7 @@ view model =
     Html.h1 [] [ Html.text "Conference room reservation"],
     Html.div [] [
       roomsView model,
-      Html.label [class "label"] [Html.text "Reservation name: "],
+      Html.span [] [Html.text "Reservation name: "],
       Html.input [E.onInput OnInput, Html.Attributes.value model.name] []]]]
 
 roomsView : Model -> Html Msg
