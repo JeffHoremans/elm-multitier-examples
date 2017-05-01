@@ -127,7 +127,7 @@ roomsView model =
         Html.td [] [
           Html.tr [] (room.reservations |> List.map (\reservation -> case reservation.set of
             Just name ->  Html.td [] [Html.a [style [("margin-right", "1em"), ("width", "4em")], class "btn btn-danger", E.onClick (SetReservation { room | reservations = List.map (\reserv -> if reserv.time == reservation.time then { reserv | set = Nothing} else reserv) room.reservations})] [Html.text "Full", Html.br [] [], Html.p [] [Html.text ("(" ++ name ++ ")")]]]
-            _ -> Html.td [] [Html.a [style [("margin-right", "1em"), ("width", "4em")], class "btn btn-success", E.onClick (SetReservation { room | reservations = List.map (\reserv -> if reserv.time == reservation.time then { reserv | set = Just model.name} else reserv) room.reservations })] [Html.text "Free", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]] ))]]) in
+            _ -> Html.td [] [Html.a [style [("margin-right", "1em"), ("width", "4em")], class "btn btn-success", E.onClick (SetReservation { room | reservations = List.map (\reserv -> if reserv.time == reservation.time then { reserv | set = Just model.name} else reserv) room.reservations })] [Html.text "Taken", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]] ))]]) in
     Html.table [ class "table table-striped table-hover"] [
       Html.thead [] [
         Html.tr [] [
