@@ -23,26 +23,10 @@ type alias Room = { number: Int
                   , name: String
                   , seats: Int
                   , tables: Int
-                  , reservations: List Reservation }
-
-type alias Reservation = { time: String
-                         , set: Maybe String}
+                  , booked: Maybe String }
 
 defaultRooms: List Room
-defaultRooms = [ Room 1 "Large conference room 1" 10 3 defaultReservations
-        , Room 2 "Large conference room 2" 8 3 defaultReservations
-        , Room 3 "Small conference room 1" 6 2 defaultReservations
-        , Room 4 "Small conference room 2" 4 1 defaultReservations]
-
-defaultReservations : List Reservation
-defaultReservations = [ Reservation "10:00" Nothing
-                      , Reservation "11:00" Nothing
-                      , Reservation "12:00" Nothing
-                      , Reservation "13:00" Nothing
-                      , Reservation "14:00" Nothing
-                      , Reservation "15:00" Nothing
-                      , Reservation "16:00" Nothing
-                      , Reservation "17:00" Nothing ]
+defaultRooms = [ Room 1 "Conference room 1" 10 3 Nothing ]
 
 initServer : (ServerModel, Cmd ServerMsg)
 initServer = ServerModel defaultRooms ! []
@@ -87,11 +71,11 @@ init {rooms} = Model rooms "" !! []
 
 -- UPDATE
 
-type Msg = SetReservation Room | Handle (Result Error (List Room)) | OnInput String | None
+type Msg = UpdateReservation Room | Handle (Result Error (List Room)) | OnInput String | None
 
 update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model = case msg of
-  SetReservation room -> model !! [performOnServer (UpdateRoom room)]
+  UpdateReservation room -> model !! [performOnServer (UpdateRoom room)]
   OnInput input -> { model | name = input } !! []
   Handle result -> case result of
     Ok rooms -> { model | rooms = rooms } !! []
@@ -124,22 +108,24 @@ roomsView model =
         Html.td [] [Html.text room.name],
         Html.td [] [Html.text (toString room.seats)],
         Html.td [] [Html.text (toString room.tables)],
-        Html.td [] [
-          Html.tr [] (room.reservations |> List.map (\reservation -> case reservation.set of
-            Just name ->  Html.td [] [Html.a [style [("margin-right", "1em"), ("width", "4em")], class "btn btn-danger", E.onClick (SetReservation { room | reservations = List.map (\reserv -> if reserv.time == reservation.time then { reserv | set = Nothing} else reserv) room.reservations})] [Html.text "Taken", Html.br [] [], Html.p [] [Html.text ("(" ++ name ++ ")")]]]
-            _ -> Html.td [] [Html.a [style [("margin-right", "1em"), ("width", "4em")], class "btn btn-success", E.onClick (SetReservation { room | reservations = List.map (\reserv -> if reserv.time == reservation.time then { reserv | set = Just model.name} else reserv) room.reservations })] [Html.text "Free", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]] ))]]) in
+        Html.td [] [case room.booked of
+          Just name ->
+            Html.a [ style [("margin-right", "1em"), ("width", "4em")]
+                   , class "btn btn-danger"
+                   , E.onClick (UpdateReservation { room | booked = Nothing }) ]
+                   [ Html.text "Taken", Html.br [] [], Html.p [] [Html.text ("(" ++ name ++ ")")]]
+          _ ->
+            Html.a [ style [("margin-right", "1em"), ("width", "4em")]
+                   , class "btn btn-success"
+                   , E.onClick (UpdateReservation { room | booked = Just model.name })]
+                   [ Html.text "Free", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]]]) in
     Html.table [ class "table table-striped table-hover"] [
       Html.thead [] [
         Html.tr [] [
           Html.th [] [Html.text "Room"],
           Html.th [] [Html.text "Seats"],
           Html.th [] [Html.text "Tables"],
-          Html.th [] [Html.text "Reservations"]],
-        Html.tr [] [
-          Html.th [] [],
-          Html.th [] [],
-          Html.th [] [],
-          Html.th [] [Html.tr [] (defaultReservations |> List.map (\reservation -> Html.th [] [ Html.p [style [("margin-right", "1em"), ("width", "4em")]] [Html.text (reservation.time ++ " ")]]))]]],
+          Html.th [] [Html.text "Reservation"]]],
       Html.tbody [] tableBody]
 
 -- MAIN
