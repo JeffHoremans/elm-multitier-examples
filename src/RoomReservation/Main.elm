@@ -110,12 +110,12 @@ roomsView model =
         Html.td [] [Html.text (toString room.tables)],
         Html.td [] [case room.booked of
           Just name ->
-            Html.a [ style [("margin-right", "1em"), ("width", "4em")]
+            Html.a [ style [("margin-right", "1em"), ("width", "5em")]
                    , class "btn btn-danger"
                    , E.onClick (UpdateReservation { room | booked = Nothing }) ]
                    [ Html.text "Taken", Html.br [] [], Html.p [] [Html.text ("(" ++ name ++ ")")]]
           _ ->
-            Html.a [ style [("margin-right", "1em"), ("width", "4em")]
+            Html.a [ style [("margin-right", "1em"), ("width", "5em")]
                    , class "btn btn-success"
                    , E.onClick (UpdateReservation { room | booked = Just model.name })]
                    [ Html.text "Free", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]]]) in
