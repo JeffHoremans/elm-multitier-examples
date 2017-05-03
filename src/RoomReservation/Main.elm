@@ -21,26 +21,30 @@ type alias ServerModel = { rooms: List Room }
 
 type alias Room = { number: Int
                   , name: String
-                  , seats: Int
-                  , tables: Int
                   , booked: Maybe String }
 
 defaultRooms: List Room
-defaultRooms = [ Room 1 "Conference room 1" 10 3 Nothing ]
+defaultRooms = [ Room 1 "Conference room 1" Nothing ]
 
 initServer : (ServerModel, Cmd ServerMsg)
 initServer = ServerModel defaultRooms ! []
 
 -- SERVER-REMOTE-UPDATE
 
-type RemoteServerMsg = UpdateRoom Room
+type RemoteServerMsg = UpdateRoomOnServer Room | UpdateReservationOnServer Int (Maybe String)
 
 serverRPCs : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
 serverRPCs rproc = case rproc of
-  UpdateRoom newRoom ->
+  UpdateRoomOnServer newRoom ->
     rpc Handle (\serverModel ->
       let newRooms = List.map (\room -> if room.number == newRoom.number then newRoom else room) serverModel.rooms in
         ({ serverModel | rooms = newRooms }, Task.succeed newRooms, Cmd.batch []))
+
+  UpdateReservationOnServer number maybeName ->
+    rpc Handle (\serverModel ->
+      let newRooms = List.map (\room -> if room.number == number then { room | booked = maybeName } else room) serverModel.rooms in
+        ({ serverModel | rooms = newRooms }, Task.succeed newRooms, Cmd.batch []))
+
 
 -- SERVER-UPDATE
 
@@ -71,11 +75,12 @@ init {rooms} = Model rooms "" !! []
 
 -- UPDATE
 
-type Msg = UpdateReservation Room | Handle (Result Error (List Room)) | OnInput String | None
+type Msg = UpdateRoom Room | UpdateReservation Int (Maybe String) | Handle (Result Error (List Room)) | OnInput String | None
 
 update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model = case msg of
-  UpdateReservation room -> model !! [performOnServer (UpdateRoom room)]
+  UpdateRoom room -> model !! [performOnServer (UpdateRoomOnServer room)]
+  UpdateReservation number name -> model !! [performOnServer (UpdateReservationOnServer number name)]
   OnInput input -> { model | name = input } !! []
   Handle result -> case result of
     Ok rooms -> { model | rooms = rooms } !! []
@@ -106,25 +111,21 @@ roomsView model =
     model.rooms |> List.map (\room ->
       Html.tr [] [
         Html.td [] [Html.text room.name],
-        Html.td [] [Html.text (toString room.seats)],
-        Html.td [] [Html.text (toString room.tables)],
         Html.td [] [case room.booked of
           Just name ->
-            Html.a [ style [("margin-right", "1em"), ("width", "5em")]
+            Html.a [ style [("margin-right", "1em"), ("width", "6em")]
                    , class "btn btn-danger"
-                   , E.onClick (UpdateReservation { room | booked = Nothing }) ]
+                   , E.onClick (UpdateRoom { room | booked = Nothing }) ]
                    [ Html.text "Taken", Html.br [] [], Html.p [] [Html.text ("(" ++ name ++ ")")]]
           _ ->
-            Html.a [ style [("margin-right", "1em"), ("width", "5em")]
+            Html.a [ style [("margin-right", "1em"), ("width", "6em")]
                    , class "btn btn-success"
-                   , E.onClick (UpdateReservation { room | booked = Just model.name })]
+                   , E.onClick (UpdateRoom { room | booked = Just model.name })]
                    [ Html.text "Free", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]]]) in
     Html.table [ class "table table-striped table-hover"] [
       Html.thead [] [
         Html.tr [] [
           Html.th [] [Html.text "Room"],
-          Html.th [] [Html.text "Seats"],
-          Html.th [] [Html.text "Tables"],
           Html.th [] [Html.text "Reservation"]]],
       Html.tbody [] tableBody]
 
