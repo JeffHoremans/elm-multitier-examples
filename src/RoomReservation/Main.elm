@@ -36,7 +36,7 @@ type RemoteServerMsg = UpdateRoomOnServer Room | UpdateReservationOnServer Int (
 serverRPCs : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
 serverRPCs rproc = case rproc of
   UpdateRoomOnServer newRoom ->
-    rpc Handle (\serverModel ->
+    rpc Handle (\serverModel -> -- here's the bug, not checking if the room is already taken
       let newRooms = List.map (\room -> if room.number == newRoom.number then newRoom else room) serverModel.rooms in
         ({ serverModel | rooms = newRooms }, Task.succeed newRooms, Cmd.batch []))
 
@@ -111,14 +111,14 @@ roomsView model =
     model.rooms |> List.map (\room ->
       Html.tr [] [
         Html.td [] [Html.text room.name],
-        Html.td [] [case room.booked of
+        Html.td [] [let btnStyle = [("margin-right", "1em"), ("width", "6em")] in case room.booked of
           Just name ->
-            Html.a [ style [("margin-right", "1em"), ("width", "6em")]
+            Html.a [ style btnStyle
                    , class "btn btn-danger"
                    , E.onClick (UpdateRoom { room | booked = Nothing }) ]
                    [ Html.text "Taken", Html.br [] [], Html.p [] [Html.text ("(" ++ name ++ ")")]]
           _ ->
-            Html.a [ style [("margin-right", "1em"), ("width", "6em")]
+            Html.a [ style btnStyle
                    , class "btn btn-success"
                    , E.onClick (UpdateRoom { room | booked = Just model.name })]
                    [ Html.text "Free", Html.br [] [], Html.p [style [("visibility", "hidden")]] [Html.text "()"]]]]) in
