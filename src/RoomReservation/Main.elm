@@ -31,7 +31,7 @@ initServer = ServerModel defaultRooms ! []
 
 -- SERVER-REMOTE-UPDATE
 
-type RemoteServerMsg = UpdateRoomOnServer Room | UpdateReservationOnServer Int (Maybe String)
+type RemoteServerMsg = UpdateRoomOnServer Room
 
 serverRPCs : RemoteServerMsg -> RPC ServerModel Msg ServerMsg
 serverRPCs rproc = case rproc of
@@ -39,12 +39,6 @@ serverRPCs rproc = case rproc of
     rpc Handle (\serverModel -> -- here's the bug, not checking if the room is already taken
       let newRooms = List.map (\room -> if room.number == newRoom.number then newRoom else room) serverModel.rooms in
         ({ serverModel | rooms = newRooms }, Task.succeed newRooms, Cmd.batch []))
-
-  UpdateReservationOnServer number maybeName ->
-    rpc Handle (\serverModel ->
-      let newRooms = List.map (\room -> if room.number == number then { room | booked = maybeName } else room) serverModel.rooms in
-        ({ serverModel | rooms = newRooms }, Task.succeed newRooms, Cmd.batch []))
-
 
 -- SERVER-UPDATE
 
@@ -75,12 +69,11 @@ init {rooms} = Model rooms "" !! []
 
 -- UPDATE
 
-type Msg = UpdateRoom Room | UpdateReservation Int (Maybe String) | Handle (Result Error (List Room)) | OnInput String | None
+type Msg = UpdateRoom Room | Handle (Result Error (List Room)) | OnInput String | None
 
 update : Msg -> Model -> ( Model, MultitierCmd RemoteServerMsg Msg )
 update msg model = case msg of
   UpdateRoom room -> model !! [performOnServer (UpdateRoomOnServer room)]
-  UpdateReservation number name -> model !! [performOnServer (UpdateReservationOnServer number name)]
   OnInput input -> { model | name = input } !! []
   Handle result -> case result of
     Ok rooms -> { model | rooms = rooms } !! []
