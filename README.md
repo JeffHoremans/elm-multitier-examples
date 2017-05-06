@@ -8,7 +8,7 @@ Examples using [multitier Elm](https://github.com/JeffHoremans/elm-multitier), a
 - ```RoomReservation/Main.elm``` very basic example that allows scheduling a conference room
 - ```Chat/Main.elm``` basic hat application for that uses various features of our multi-tier framework
 
-- ```*Debug/Main.elm``` definitions of the applications above in debug mode, running them will start the application with the debugger
+- ```RoomReservationDebug/Main.elm and ChatDebug/Main.elm``` definitions of the applications above in debug mode, running them will start the application with the debugger
 
 ## Try the examples
 
@@ -38,4 +38,4 @@ To run the example, execute the `server.js` file with Node:
 
     node server.js
 
-This will start up the the server part of the multi-tier application which hosts the client part at [http://localhost:8081/](http://localhost:8081/) 
+This will start up the the server part of the multi-tier application which hosts the client part at [http://localhost:8081/](http://localhost:8081/)
