@@ -1,5 +1,6 @@
 # elm-multitier-examples
-Examples using [multitier Elm](https://github.com/JeffHoremans/elm-multitier), an extension to Elm in order to make it a multi-tier language, made in the context of my Master's thesis.
+Examples showing the use of [multitier Elm](https://github.com/JeffHoremans/elm-multitier), an extension to Elm in order to make it a multi-tier language, made in the context of my Master's thesis.
+Additionally, each example can be also run in debug mode with my [multitier Elm Debugger](https://github.com/JeffHoremans/elm-multitier).
 
 ### The examples
 
