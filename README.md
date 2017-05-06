@@ -17,7 +17,7 @@ npm is distributed with Node.js, so you download Node.js, you automatically get 
 
 ### Install [Elm](http://elm-lang.org/)
 Install Elm by following the [installation guide](https://guide.elm-lang.org/install.html).
-We uses Elm version 0.18 for our implementation.
+We used Elm version 0.18 for our implementation.
 
 ### Download the repository
     git clone --recursive https://github.com/JeffHoremans/elm-multitier-examples.git
