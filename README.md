@@ -28,10 +28,16 @@ We used Elm version 0.18 for our implementation.
 
     npm install elm-multitier-make
 
+### Install the [websocket](https://www.npmjs.com/package/websocket) npm package
+We used this package to support server-side WebSocket functionality in our multi-tier Elm framework.
+To install it, run
+
+    npm install websocket​
+
 ### Run an example
 To build an example, run:
 
-    elm-multitier-make src/[folder of example]/Main.elm
+    $(npm bin)/elm-multitier-make src/[folder of example]/Main.elm
 
 This will generate a couple of files in the current folder:
 
