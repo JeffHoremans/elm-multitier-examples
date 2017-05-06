@@ -23,6 +23,10 @@ We used Elm version 0.18 for our implementation.
     git clone --recursive https://github.com/JeffHoremans/elm-multitier-examples.git
     cd elm-multitier-examples
 
+### Install our build tool [elm-multitier-make](https://github.com/JeffHoremans/elm-multitier-make.git)
+
+  npm install elm-multitier-make
+
 ### Run an example
 To build an example, run:
 
