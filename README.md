@@ -25,7 +25,7 @@ We used Elm version 0.18 for our implementation.
 
 ### Install our build tool [elm-multitier-make](https://github.com/JeffHoremans/elm-multitier-make.git)
 
-  npm install elm-multitier-make
+    npm install elm-multitier-make
 
 ### Run an example
 To build an example, run:
