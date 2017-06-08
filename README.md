@@ -11,6 +11,10 @@ Additionally, each example can be also run in debug mode with my [multitier Elm 
 
 - ```RoomReservationDebug/Main.elm and ChatDebug/Main.elm``` definitions of the applications above in debug mode, running them will start the application with the debugger
 
+The "src/Haste" folder contains multi-tier Elm versions of example [Haste](https://github.com/valderman/haste-compiler/tree/master/examples) applications. Haste is a similar multi-tier framework, the examples were implemented to evaluate how our framework compares to Haste in usage and lines of code. These examples can obviously be run as well:
+- ```Haste/Chatbox/Main.elm``` a simple chatbox application
+- ```Haste/HasteApp/Main.elm``` a "message trader"
+
 ## Try the examples
 
 ### Download [Node.js](https://nodejs.org) and [npm](https://www.npmjs.com)

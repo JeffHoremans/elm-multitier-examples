@@ -5,6 +5,6 @@ repl-temp-*
 
 # generated files
 *.js
-*.html
-src/*/.ClientStarter.elm
-src/*/.ServerStarter.elm
+src/*/*.html
+*.ClientStarter.elm
+*.ServerStarter.elm
